@@ -1,5 +1,5 @@
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import './DriveControls.css';
-import { LucideArrowUp, LucideArrowDown, LucideSquare } from 'lucide-react';
 
 interface DriveControlsProps {
   level: number;
@@ -15,36 +15,31 @@ export default function DriveControls({ level, setLevel }: DriveControlsProps) {
   const handleStop = () => setLevel(0);
 
   return (
-    <div className="drive-controls">
-      <div className="controls-hint">
-        <span><kbd>W</kbd> Accelerate</span>
-        <span><kbd>A</kbd> Halt</span>
-        <span><kbd>S</kbd> Decelerate / Rewind</span>
-      </div>
+    <div className="lux-drive-bay">
+      <button 
+         className={`lux-btn backward ${level < 0 ? 'active' : ''}`} 
+         onClick={handleBackward}
+      >
+        <ChevronLeft size={18} />
+        <span>Reverse</span>
+      </button>
       
-      <div className="buttons-group">
-        <button 
-           className={`control-btn forward ${level > 0 ? 'active' : ''}`} 
-           onClick={handleForward}
-           title="W"
-        >
-          <LucideArrowUp size={28} />
-        </button>
-        <button 
-           className={`control-btn stop ${level === 0 ? 'active' : ''}`} 
-           onClick={handleStop}
-           title="A"
-        >
-          <LucideSquare size={24} fill="currentColor" />
-        </button>
-        <button 
-           className={`control-btn backward ${level < 0 ? 'active' : ''}`} 
-           onClick={handleBackward}
-           title="S"
-        >
-          <LucideArrowDown size={28} />
-        </button>
-      </div>
+      <button 
+         className={`lux-btn stop ${level === 0 ? 'active' : ''}`} 
+         onClick={handleStop}
+      >
+        <X size={18} />
+        <span>Hard Stop</span>
+      </button>
+
+      <button 
+         className={`lux-btn forward ${level > 0 ? 'active' : ''}`} 
+         onClick={handleForward}
+      >
+        <span>Accelerate</span>
+        <ChevronRight size={18} />
+      </button>
     </div>
   );
 }
+

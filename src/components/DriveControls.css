@@ -1,76 +1,56 @@
-.drive-controls {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.lux-drive-bay {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 1.5rem;
+  width: 100%;
 }
 
-.controls-hint {
+.lux-btn {
   display: flex;
-  gap: 2rem;
-  font-size: 0.85rem;
-  opacity: 0.5;
-}
-
-.controls-hint kbd {
-  background: rgba(255,255,255,0.1);
-  padding: 3px 6px;
-  border-radius: 4px;
-  font-family: inherit;
-  margin-right: 6px;
-  border: 1px solid rgba(255,255,255,0.2);
-}
-
-.buttons-group {
-  display: flex;
-  gap: 2rem;
-}
-
-.control-btn {
-  width: 75px;
-  height: 75px;
-  border-radius: 50%;
-  border: 1px solid var(--glass-border);
-  background: rgba(255,255,255,0.03);
-  color: #fff;
-  display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 1.25rem;
+  border: 1px solid var(--glass-border-lux);
+  border-radius: 16px;
+  background: white;
+  color: var(--noir);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
-.control-btn:hover {
-  background: rgba(255,255,255,0.08);
-  transform: scale(1.1);
+.lux-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+  border-color: #D1D1D6;
 }
 
-.control-btn:active {
-  transform: scale(0.95);
+.lux-btn:active {
+  transform: translateY(0);
 }
 
-.control-btn.active.forward {
-  background: rgba(0, 255, 213, 0.2);
-  border-color: rgba(0, 255, 213, 0.5);
-  color: var(--accent-color);
-  box-shadow: 0 0 20px var(--accent-glow);
+.lux-btn.forward.active {
+  background: var(--accent-lux);
+  color: white;
+  border-color: var(--accent-lux);
+  box-shadow: 0 10px 25px rgba(230, 87, 34, 0.4);
 }
 
-.control-btn.active.backward {
-  background: rgba(255, 100, 100, 0.2);
-  border-color: rgba(255, 100, 100, 0.5);
-  color: #ff6464;
-  box-shadow: 0 0 20px rgba(255, 100, 100, 0.3);
+.lux-btn.backward.active {
+  background: var(--noir);
+  color: white;
+  border-color: var(--noir);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
 }
 
-.control-btn.active.stop {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.5);
+.lux-btn.stop.active {
+  background: #F2F2F7;
+  color: #8E8E93;
+  border-color: transparent;
 }
 
-.gear-1 { color: #00ffd5; text-shadow: 0 0 8px rgba(0,255,213,0.5); }
-.gear-2 { color: #00e0ff; text-shadow: 0 0 8px rgba(0,224,255,0.5); }
-.gear-3 { color: #00a2ff; text-shadow: 0 0 8px rgba(0,162,255,0.5); }
-.gear-4 { color: #4000ff; text-shadow: 0 0 8px rgba(64,0,255,0.5); }
-.gear-5 { color: #b300ff; text-shadow: 0 0 8px rgba(179,0,255,0.5); }
-.gear-6 { color: #ff00aa; text-shadow: 0 0 8px rgba(255,0,170,0.5); }
