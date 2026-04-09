@@ -1,63 +1,46 @@
-# 🏎 Acoustic Drive: High-Speed Immersive Screen Reader
+# CS 8903: High-Speed Audio-First Data Exploration
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Deployed with Vercel](https://img.shields.io/badge/Deployed_with-Vercel-000000?logo=vercel&logoColor=white)](https://vercel.com)
+This project explores the optimization of non-visual data navigation through large, sorted lists. Current screen reader technology often relies on linear, one-by-one item iteration, which becomes increasingly inefficient as dataset sizes grow. This research proposes and implements a **Velocity-Adaptive Audio (VAA)** model that treats navigation as a physics-based "shuttling" experience.
 
-**Acoustic Drive (MOD-5000)** is a professional-grade, experimental screen reader interface designed for extreme-speed data navigation. Inspired by luxury automotive instrumentation and high-performance audio engineering, it allows users to navigate massive datasets at velocities exceeding 900+ WPM through adaptive audio feedback.
+## 🔬 Research Objective
+The goal is to minimize **Time-to-Target** for visually impaired users by mapping scroll velocity to audio density. By utilizing structural landmarks (alphabetical boundaries) and synthesized auditory feedback, the system allows users to "scan" thousands of entries in seconds.
 
-![Dashboard Preview](docs/UI.png)
+## 🕹 The "Accelerator" Metaphor
+Navigation is implemented using a "gear-based" physics engine where the user controls velocity rather than individual item selection:
+- **Accelerate (W)**: Increases the scroll velocity (Gears 1-6).
+- **Brake/Reverse (S)**: Decelerates or reverses the scroll direction.
+- **Hard Stop (A)**: Immediately halts all motion.
 
-## ✨ Key Features
+## 🔊 Velocity-Adaptive Audio (VAA) Model
+The system dynamically mutates the audio output based on the current navigation speed to prevent cognitive overload while maintaining spatial awareness:
 
-- **Adaptive Audio Engine**: Spoken feedback dynamically simplifies as navigation speed increases (Full Name → Last Name → Initial Section).
-- **Haptic-Inspired Audio Ticks**: High-frequency sine-wave "ticks" provide a spatial sense of progress even when speech is compressed.
-- **Alphabet Quick-Nav**: A vertical navigation strip for real-time section tracking across thousands of entries.
-- **Acoustic Pulse**: Real-time visual waveform feedback integrated into the status header.
-- **Velocity Metrics**: Live precision tracking of WPM, Peak Velocity, and Encounter history.
-- **Physics-Driven Navigation**: Toggle between `Linear` and `Exponential` scrolling physics to match your cognitive load.
+- **Low Velocity (Gears 1-2)**: High-fidelity output. The engine announces the full "LastName, FirstName" of entries.
+- **Medium Velocity (Gear 3)**: Adaptive simplification. The engine announces only the "LastName" and plays audio ticks for every 5 entries.
+- **High Velocity (Gears 4-6)**: Structural landmarks. The engine announces only the current alphabetical section (e.g., "A", "B", "C") and plays high-frequency ticks for every crossing.
 
-## 🎮 Navigation Controls
-
-| Key | Action |
-| :--- | :--- |
-| **W** | Accelerate (Shift Gear Up) |
-| **S** | Reverse / Brake (Shift Gear Down) |
-| **A** | Emergency Hard Stop |
-
-## 🛠 Tech Stack
-
-- **Core**: React 18, TypeScript, Vite
-- **Audio**: Web Speech API (`SpeechSynthesis`), Web Audio API (`AudioContext`)
-- **Icons**: Lucide React
-- **Styling**: Vanilla CSS (Hermès-inspired palette)
+## 🖥 Core Components
+- **Acoustic Drive Engine**: A singleton manager for `SpeechSynthesis` and `AudioContext`.
+- **Alphabet Quick-Nav**: A vertical structural map that provides real-time section tracking.
+- **Voice Pulse**: A visual representation of auditory data bursts to help during debugging and multi-modal testing.
+- **Encounter Ticker**: A live history of the most recently traversed entries.
 
 ## 🚀 Getting Started
+```bash
+# Clone the repository
+git clone https://github.com/priyanshumehta/acoustic-drive.git
 
-### Prerequisites
-- Node.js (v18+)
-- npm
+# Install dependencies
+npm install
 
-### Installation
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/priyanshum17/acoustic-drive.git
-   cd acoustic-drive
-   ```
+# Start the environment
+npm run dev
+```
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Run the development server:
-   ```bash
-   npm run dev
-   ```
-
-## 📐 Design Philosophy
-
-Acoustic Drive was built with a "Boutique Technical" aesthetic—merging Apple's minimalist precision with the warm, authoritative palette of luxury craftsmanship. The interface aims to reduce "visual noise" and maximize "auditory bandwidth," allowing for a focused navigation experience where sound is the primary driver.
+## 📚 Technical Documentation
+Detailed specifications and implementation details can be found in the `/docs` directory:
+- [Design Specifications](docs/design.md)
+- [Functional Breakdown & Screenshots](docs/screenshots.md)
+- [Initial Research Notes](docs/research.md)
 
 ---
-
-*Developed for Special Problems in Screen Reading / Spring 2026*
+*CS 8903 Special Problems | Spring 2026*
