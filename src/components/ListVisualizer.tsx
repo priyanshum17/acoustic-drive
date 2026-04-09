@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useMemo } from 'react';
 import { MOCK_DIRECTORY } from '../data/mockDirectory';
 import { AudioAnnouncer } from '../engine/AudioAnnouncer';
 import DriveControls from './DriveControls';
-import { Activity, Gauge, Navigation, Speaker, Zap, Layers, History, Clock } from 'lucide-react';
+import { Activity, Gauge, Navigation, Layers, History, Clock } from 'lucide-react';
 import './ListVisualizer.css';
 
 const ITEM_HEIGHT = 80;
