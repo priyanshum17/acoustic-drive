@@ -39,6 +39,15 @@ npm install
 npm run dev
 ```
 
+## Research Foundations
+The Acoustic Drive System is built upon core principles of Human-Computer Interaction and Auditory Display. Key inspirations include:
+*   **Spearcons**: Developed by the Georgia Tech Sonification Lab for high-speed menu navigation.
+*   **Velocity-Adaptive Audio**: Our model for mapping interaction speed to auditory granularity.
+
+Detailed research analysis can be found in the documentation:
+*   [Literature Review](docs/literature_review.md): A summary of academic papers on Spearcons, Earcons, and Shuttling.
+*   [Research Application](docs/research_application.md): A mapping of academic findings to the specific implementation in this codebase.
+
 ## Technical Documentation
 Detailed specifications and implementation details can be found in the `/docs` directory:
 - [Design Specifications](docs/design.md)
