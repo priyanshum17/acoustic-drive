@@ -155,6 +155,8 @@
   flex-direction: column;
   background: #fff;
   position: relative;
+  min-width: 0;
+  min-height: 0;
 }
 
 .viewport-overflow {
@@ -162,6 +164,8 @@
   position: relative;
   overflow: hidden;
   background: radial-gradient(circle at center, #fff 0%, #FAF9F6 100%);
+  min-width: 0;
+  min-height: 0;
 }
 
 .viewport-overflow::before, .viewport-overflow::after {
@@ -430,4 +434,127 @@
 
 .icon-gold { color: var(--gold); }
 
+/* --- DEV MODE: TREE VISUALIZER --- */
+.tree-canvas {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  overflow: hidden;
+  padding: 2rem;
+  box-sizing: border-box;
+}
 
+.tree-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  opacity: 0.3;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  position: relative;
+  max-width: 100%;
+}
+
+.tree-row.active-row {
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+.row-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--accent-lux);
+}
+
+.nodes-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: 100%;
+  overflow: hidden;
+  padding: 0 1rem;
+}
+
+.tree-node {
+  padding: 0.5rem 1rem;
+  background: white;
+  border: 1px solid var(--glass-border-lux);
+  border-radius: 8px;
+  position: relative;
+  min-width: 40px;
+  text-align: center;
+  transition: all 0.2s ease;
+  color: var(--noir);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  flex-shrink: 0;
+}
+
+.tree-node.selected {
+  background: var(--noir);
+  color: white;
+  border-color: var(--noir);
+  box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+  transform: translateY(-2px);
+}
+
+.node-prefix {
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.leaf-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.leaf-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.active-indicator {
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 4px;
+  background: var(--accent-lux);
+  border-radius: 2px;
+  box-shadow: 0 0 8px var(--accent-lux);
+}
+
+.more-nodes {
+  color: #888;
+  font-weight: bold;
+  letter-spacing: 2px;
+  flex-shrink: 0;
+}
+
+.branch-line {
+  width: 2px;
+  height: 1.5rem;
+  background: rgba(0, 0, 0, 0.1);
+  position: absolute;
+  bottom: -1.5rem;
+}
+
+.active-row .branch-line {
+  background: var(--accent-lux);
+}
+
+.toggle-dev-panel {
+  margin-top: auto;
+  border-color: var(--accent-lux);
+}
+.toggle-dev-panel:hover {
+  background: rgba(230, 87, 34, 0.05);
+}

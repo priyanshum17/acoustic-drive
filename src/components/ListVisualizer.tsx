@@ -15,7 +15,7 @@ const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 export default function ListVisualizer() {
   const [level, setLevel] = useState(0);
   const [mode, setMode] = useState<'linear' | 'exponential'>('linear');
-  const [baseSpeed, setBaseSpeed] = useState(1.5);
+  const [baseSpeed, setBaseSpeed] = useState(0.5);
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [displayVelocity, setDisplayVelocity] = useState(0);
   const [devMode, setDevMode] = useState(false);
