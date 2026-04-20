@@ -6,7 +6,6 @@ export class AudioAnnouncer {
   
   private lastSpokenPrefix: string = "";
   private lastSpeakTime: number = 0;
-  private throttleMs: number = 1500; 
   private activeVoice: SpeechSynthesisVoice | null = null;
   
   private constructor() {
@@ -54,7 +53,7 @@ export class AudioAnnouncer {
     }
   }
 
-  public playTick() {
+  public playTick(char?: string) {
     if (this.isMuted || !this.audioCtx) return;
     
     // Strictly prevent illegal resumes
@@ -65,8 +64,16 @@ export class AudioAnnouncer {
       const gainNode = this.audioCtx.createGain();
       
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(800, this.audioCtx.currentTime); 
-      osc.frequency.exponentialRampToValueAtTime(1400, this.audioCtx.currentTime + 0.05);
+      let freq = 800;
+      if (char) {
+        const code = char.toUpperCase().charCodeAt(0);
+        if (code >= 65 && code <= 90) { // A-Z
+          freq = 800 + (code - 65) * (800 / 25);
+        }
+      }
+
+      osc.frequency.setValueAtTime(freq, this.audioCtx.currentTime); 
+      osc.frequency.exponentialRampToValueAtTime(freq * 1.5, this.audioCtx.currentTime + 0.05);
 
       gainNode.gain.setValueAtTime(0.3, this.audioCtx.currentTime); // Very loud
       gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.05);
@@ -85,49 +92,21 @@ export class AudioAnnouncer {
     }
   }
 
-  public speak(itemText: string, level: number) {
-    if (this.isMuted) return;
+  public speak(itemText: string, rate: number = 1.0, spellOut: boolean = false, force: boolean = false): boolean {
+    if (this.isMuted) return false;
 
     const now = performance.now();
     
-    // Extremely strict hard-throttle (350ms). Browsers natively crash if you 
-    // spam SpeechSynthesis.cancel() repeatedly on MacOS at higher speeds!
-    if (now - this.lastSpeakTime < 350) return;
+    const dynamicThrottle = spellOut ? 100 : 350;
+    if (!force && (now - this.lastSpeakTime < dynamicThrottle)) return false;
 
     let toSpeak = itemText;
-    let isMajorBoundary = false;
-
-    // Boundary tracking checks
-    const currentFirstLetter = itemText.charAt(0).toUpperCase();
-    let lastFirstLetter = "";
-    if (this.lastSpokenPrefix.length > 0) {
-      lastFirstLetter = this.lastSpokenPrefix.charAt(0).toUpperCase();
-    }
-    isMajorBoundary = lastFirstLetter !== currentFirstLetter;
-    
-    if (level === 2) {
-      toSpeak = itemText.split(',')[0];
-    } else if (level >= 3) {
-      if (isMajorBoundary) {
-         // Just natively say "C"
-         toSpeak = currentFirstLetter;
-      } else {
-         // Space the letters so the AI says "C A" rather than pronouncing "Ca" as "Kah"
-         const limit = Math.min(2, itemText.length);
-         toSpeak = itemText.substring(0, limit).toUpperCase().split('').join(' ');
-      }
+    if (spellOut) {
+       // Space out letters so the AI says "C A" rather than pronouncing "Ca" as "Kah"
+       toSpeak = itemText.toUpperCase().split('').join(' ');
     }
 
-    // Orientation checking for Level 3+
-    if (level >= 3 && !isMajorBoundary) {
-       // Only announce orientation if staying securely within the same boundary for 1.5s
-       if (now - this.lastSpeakTime < this.throttleMs) {
-          return;
-       }
-    } else if (level < 3) {
-       // Stop duplicate speaking of the same exact target
-       if (this.lastSpokenPrefix === toSpeak) return;
-    }
+    if (!force && this.lastSpokenPrefix === toSpeak && !spellOut) return false;
 
     this.cancel(); 
     this.lastSpokenPrefix = toSpeak;
@@ -136,9 +115,12 @@ export class AudioAnnouncer {
     try {
       const utterance = new SpeechSynthesisUtterance(toSpeak);
       if (this.activeVoice) utterance.voice = this.activeVoice;
-      utterance.rate = 1.0; 
+      utterance.rate = Math.min(Math.max(rate, 0.8), 2.5); 
       utterance.volume = 1.0;
       this.synth.speak(utterance);
-    } catch(e) {}
+      return true;
+    } catch(e) {
+      return false;
+    }
   }
 }
