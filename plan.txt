@@ -1,0 +1,22 @@
+do a comprehensvie review of the project, understand what it is doing right now and then i want you to understnad that
+this is project is not a create a interface that looks like the a car, we're using that more a metaphor for our experiment, 
+the key idea is a research idea to find a faster way to navigations through lists using audio only. The goal is to make it 
+faster than any aviable rersearch method found. 
+
+Ok, so here is what we have to do. For the phone book, right internally we're demoonstrating this as a list.
+But this is not what we're supposed to do. A better way would be a have 5 gears or 5 levels of increasing and decreasing speed
+and instead of linearly increaring the speed. We start of a the first element, in a trie like data structure, so the in first gear 
+we bascially go from index 1 to index 2. But now, think of the problem this way, it's like a tire with 5 levels, if let's say in the first
+gear, we start a 1, and bascially the fifth gear would be us going thorugh alphaberts, A, B, C, D, and then the fourth level would be AA, AB, 
+the third level would be AAA AAB, and then second would be 4 letter like jumping like that and the normal one would be just using the full index
+and incresing the index by 1.
+
+You get the point right, instead of using a linear structure to navigate, we use a tree like structure to navigate, and we can switch between the gears
+to change the speed of the navigation, so that we can find the element we're looking for faster.
+
+The internal data structure would look like a trie where it has access the left left to it, above it, below it, right right to it. So, bacially, 
+when you start at gear 1, you're at the index 1, let's say the name was ANSEL, the second one was ANTHONY, the third was ANTIQUITY, then 4th
+was ANTARCTICA. When in gear 1, we'll start of at ANSEL, and iterate list index + 1, BUT THEN when we shift our gear to 2, you'll then start jumping, 
+ANSE, ANSF (if that's present) or the element to the right of in their data strucre. 
+
+Now for the UI part, keep it realivley simialt but we may need to redo the scrollign anumationg to take in the accont rapid speed increases.
