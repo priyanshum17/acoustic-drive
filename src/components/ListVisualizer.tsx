@@ -3,7 +3,7 @@ import { MOCK_DIRECTORY } from '../data/mockDirectory';
 import { AudioAnnouncer } from '../engine/AudioAnnouncer';
 import { TrieNavigator, TrieNode } from '../engine/TrieNavigator';
 import DriveControls from './DriveControls';
-import { Activity, Gauge, Navigation, Layers, History, Clock } from 'lucide-react';
+import { Activity, Gauge, Navigation, Layers, History, Clock, Network } from 'lucide-react';
 import './ListVisualizer.css';
 
 const ITEM_HEIGHT = 80;
@@ -18,6 +18,7 @@ export default function ListVisualizer() {
   const [baseSpeed, setBaseSpeed] = useState(1.5);
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [displayVelocity, setDisplayVelocity] = useState(0);
+  const [devMode, setDevMode] = useState(false);
   
   // New Metrics & Immersion
   const [peakWpm, setPeakWpm] = useState(0);
@@ -234,6 +235,72 @@ export default function ListVisualizer() {
     return list;
   }, [startIndex, endIndex, scrollTop, currentCenterIndex]);
 
+  // --- DEV MODE RENDERING ---
+  const path: TrieNode[] = [];
+  let curr: TrieNode | null = currentNodeRef.current;
+  while (curr && curr.depth > 0) {
+      path.unshift(curr);
+      curr = curr.parent;
+  }
+
+  let activeDepth = 5;
+  const absLevel = Math.abs(level);
+  if (absLevel === 2) activeDepth = 4;
+  if (absLevel === 3) activeDepth = 3;
+  if (absLevel === 4) activeDepth = 2;
+  if (absLevel >= 5) activeDepth = 1;
+
+  const rows = [];
+  let parentForNextRow = (path.length > 0 && path[0].parent) ? path[0].parent : null;
+
+  for (let i = 0; i < 5; i++) {
+     const isRowActive = (i + 1) === activeDepth;
+     let childrenToRender: TrieNode[] = [];
+     let selectedNodeInRow: TrieNode | null = null;
+     
+     if (i < path.length) {
+         selectedNodeInRow = path[i];
+         parentForNextRow = path[i];
+         childrenToRender = path[i].parent ? path[i].parent!.children : parentForNextRow?.children || [];
+     } else {
+         childrenToRender = parentForNextRow ? parentForNextRow.children : [];
+     }
+
+     if (childrenToRender.length === 0) continue;
+
+     const selectedIndex = childrenToRender.indexOf(selectedNodeInRow!);
+     const startIdx = Math.max(0, selectedIndex - 8);
+     const endIdx = Math.min(childrenToRender.length, selectedIndex + 8);
+     const visibleChildren = childrenToRender.slice(startIdx, endIdx);
+
+     rows.push(
+         <div key={`depth-${i+1}`} className={`tree-row ${isRowActive ? 'active-row' : ''}`}>
+            <div className="row-label">Depth {i+1}</div>
+            <div className="nodes-container">
+               {startIdx > 0 && <div className="more-nodes">...</div>}
+               {visibleChildren.map(child => {
+                  const isSelected = child === selectedNodeInRow;
+                  const isLeaf = child.depth === 5;
+                  return (
+                     <div key={child.prefix} className={`tree-node ${isSelected ? 'selected' : ''}`}>
+                        {isLeaf ? (
+                           <div className="leaf-content">
+                              <span className="leaf-name">{child.contact?.name}</span>
+                           </div>
+                        ) : (
+                           <span className="node-prefix">{child.prefix}</span>
+                        )}
+                        {isSelected && isRowActive && <div className="active-indicator" /> }
+                     </div>
+                  );
+               })}
+               {endIdx < childrenToRender.length && <div className="more-nodes">...</div>}
+            </div>
+            {i < 4 && <div className="branch-line"></div>}
+         </div>
+     );
+  }
+
   const wpm = Math.abs(Math.round(displayVelocity * 60));
   const progress = (positionRef.current / (LIST_SIZE - 1)) * 100;
 
@@ -289,9 +356,15 @@ export default function ListVisualizer() {
           <section className="viewport-primary">
             <div className="viewport-overflow">
               <div className="focal-anchor"></div>
-              <div className="list-content-frame">
-                {items}
-              </div>
+              {devMode ? (
+                 <div className="tree-canvas">
+                    {rows}
+                 </div>
+              ) : (
+                 <div className="list-content-frame">
+                   {items}
+                 </div>
+              )}
               
               {/* Discrete Progress Scrubber */}
               <div className="global-scrubber">
@@ -356,6 +429,14 @@ export default function ListVisualizer() {
                  <Navigation size={14} />
                  <span>Offset: {Math.round(positionRef.current)}</span>
                </div>
+            </div>
+
+            <div className="config-panel toggle-dev-panel" onClick={() => setDevMode(!devMode)}>
+               <div className="cfg-header">
+                 <Network size={14} />
+                 <span>Developer Mode</span>
+               </div>
+               <div className="cfg-val status" data-linked={devMode}>{devMode ? 'ACTIVE' : 'OFF'}</div>
             </div>
           </aside>
         </main>
