@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { MOCK_DIRECTORY } from '../data/mockDirectory';
 import { AudioAnnouncer } from '../engine/AudioAnnouncer';
+import { TrieNavigator, TrieNode } from '../engine/TrieNavigator';
 import DriveControls from './DriveControls';
 import { Activity, Gauge, Navigation, Layers, History, Clock } from 'lucide-react';
 import './ListVisualizer.css';
@@ -14,7 +15,7 @@ const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 export default function ListVisualizer() {
   const [level, setLevel] = useState(0);
   const [mode, setMode] = useState<'linear' | 'exponential'>('linear');
-  const [baseSpeed, setBaseSpeed] = useState(15.0);
+  const [baseSpeed, setBaseSpeed] = useState(1.5);
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [displayVelocity, setDisplayVelocity] = useState(0);
   
@@ -24,6 +25,13 @@ export default function ListVisualizer() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [history, setHistory] = useState<string[]>([]);
   const spokenItems = useRef<Set<string>>(new Set());
+  
+  const trieNavigator = useMemo(() => new TrieNavigator(MOCK_DIRECTORY), []);
+  const currentNodeRef = useRef<TrieNode>(trieNavigator.getLeafAt(0));
+  const lastSpokenNodeRef = useRef<TrieNode | null>(null);
+  const clutchUntilRef = useRef<number>(0);
+  const hopProgressRef = useRef(0);
+  const targetLinearIndexRef = useRef(0);
   
   const positionRef = useRef(0);
   const [scrollTop, setScrollTop] = useState(0);
@@ -73,46 +81,83 @@ export default function ListVisualizer() {
           setPeakWpm(prev => Math.max(prev, currentWpm));
       }
       
-      if (velocity !== 0) {
-         let oldPos = positionRef.current;
-         let newPos = oldPos + velocity * dt;
-         if (newPos <= 0) {
-            newPos = 0;
-            setLevel(0);
-         } else if (newPos >= LIST_SIZE - 1) {
-            newPos = LIST_SIZE - 1;
-            setLevel(0);
+      if (level !== 0) {
+         const sign = Math.sign(level);
+         const absLevel = Math.abs(level);
+         
+         // 1. Shift Gears (Vertical movement in Trie)
+         let targetDepth = 5; // Gear 1 (Leaf)
+         if (absLevel === 2) targetDepth = 4;
+         if (absLevel === 3) targetDepth = 3;
+         if (absLevel === 4) targetDepth = 2;
+         if (absLevel >= 5) targetDepth = 1;
+         
+         if (currentNodeRef.current.depth > targetDepth) {
+            currentNodeRef.current = currentNodeRef.current.getAncestorAtDepth(targetDepth);
+         } else if (currentNodeRef.current.depth < targetDepth) {
+            let curr = currentNodeRef.current;
+            while (curr.depth < targetDepth && curr.children.length > 0) {
+               curr = curr.children[0];
+            }
+            currentNodeRef.current = curr;
          }
          
-         positionRef.current = newPos;
-         setScrollTop(newPos * ITEM_HEIGHT);
+         // 2. Horizontal Hopping
+         let hopRate = baseSpeed;
+         if (time > clutchUntilRef.current) {
+             hopProgressRef.current += hopRate * dt;
+         }
          
-         if (audioEnabled) {
-             const prevIndex = Math.floor(oldPos + 0.5);
-             const newIndex = Math.floor(newPos + 0.5);
-             
-             if (prevIndex !== newIndex && Math.abs(velocity) > 0.5) {
-                announcerRef.current.playTick();
+         let hopped = false;
+         while (hopProgressRef.current >= 1) {
+             hopProgressRef.current -= 1;
+             let nextNode = sign > 0 ? currentNodeRef.current.nextSibling : currentNodeRef.current.prevSibling;
+             if (nextNode) {
+                 currentNodeRef.current = nextNode;
+                 hopped = true;
              }
+         }
+         
+         // 3. Audio & UI side effects on Hop
+         if (hopped && audioEnabled) {
+             const leaf = currentNodeRef.current.depth === 5 ? currentNodeRef.current : currentNodeRef.current.getFirstLeaf();
+             const char = currentNodeRef.current.prefix.charAt(0);
+             
+             announcerRef.current.playTick(char);
+             
+             // Adaptive Talking Rate
+             const talkingRate = 1.0;
+             const spellOut = targetDepth < 5; // Spell out prefixes
+             
+             const actuallySpoke = announcerRef.current.speak(currentNodeRef.current.prefix, talkingRate, spellOut, false);
+             if (actuallySpoke) {
+                lastSpokenNodeRef.current = currentNodeRef.current;
+             }
+             
+             // Pulse Effect & History
+             setIsSpeaking(true);
+             clearTimeout(speakTimer);
+             speakTimer = setTimeout(() => setIsSpeaking(false), 200);
 
-             const currentIdx = Math.floor(newPos + 0.5); 
-             const item = MOCK_DIRECTORY[currentIdx];
-             if (item) {
-                 announcerRef.current.speak(item.name, Math.abs(level));
-                 
-                 // Pulse Effect & History
-                 setIsSpeaking(true);
-                 clearTimeout(speakTimer);
-                 speakTimer = setTimeout(() => setIsSpeaking(false), 200);
-
-                 if (!spokenItems.current.has(item.id)) {
-                   spokenItems.current.add(item.id);
-                   setSessionCount(spokenItems.current.size);
-                   setHistory(prev => [item.name, ...prev].slice(0, 10));
-                 }
+             if (leaf.contact && !spokenItems.current.has(leaf.contact.id)) {
+               spokenItems.current.add(leaf.contact.id);
+               setSessionCount(spokenItems.current.size);
+               setHistory(prev => [leaf.contact!.name, ...prev].slice(0, 10));
              }
          }
       }
+      
+      // 4. Update target linear index
+      targetLinearIndexRef.current = currentNodeRef.current.depth === 5 
+        ? currentNodeRef.current.linearIndex 
+        : currentNodeRef.current.getFirstLeaf().linearIndex;
+
+      // 5. Smooth visual interpolation
+      const diff = targetLinearIndexRef.current - positionRef.current;
+      positionRef.current += diff * 15 * dt; // frame-rate independent easing
+      if (Math.abs(diff) < 0.05) positionRef.current = targetLinearIndexRef.current;
+      
+      setScrollTop(positionRef.current * ITEM_HEIGHT);
       reqId = requestAnimationFrame(loop);
     };
     reqId = requestAnimationFrame(loop);
@@ -128,11 +173,22 @@ export default function ListVisualizer() {
         if (!audioEnabled) return; 
 
         if (e.key === 'w' || e.key === 'W') {
-           setLevel(prev => Math.min(prev + 1, MAX_LEVEL));
+           setLevel(prev => {
+              clutchUntilRef.current = performance.now() + 2000;
+              return Math.min(prev + 1, MAX_LEVEL);
+           });
         } else if (e.key === 's' || e.key === 'S') {
-           setLevel(prev => Math.max(prev - 1, -MAX_LEVEL));
+           setLevel(prev => {
+              clutchUntilRef.current = performance.now() + 2000;
+              return Math.max(prev - 1, -MAX_LEVEL);
+           });
         } else if (e.key === 'a' || e.key === 'A') {
-           setLevel(0);
+           setLevel(() => {
+              if (lastSpokenNodeRef.current) {
+                 currentNodeRef.current = lastSpokenNodeRef.current;
+              }
+              return 0;
+           });
            announcerRef.current.cancel();
         }
      };
@@ -267,13 +323,13 @@ export default function ListVisualizer() {
               <div className="cfg-val">{mode}</div>
             </div>
 
-            <div className="config-panel slider-panel">
+             <div className="config-panel slider-panel">
                <div className="cfg-header">
                  <Clock size={14} />
-                 <span>Sens: {baseSpeed}</span>
+                 <span>Sens: {baseSpeed.toFixed(2)}</span>
                </div>
                <input 
-                  type="range" min="0.5" max="50" step="0.5" 
+                  type="range" min="0.01" max="5.00" step="0.01" 
                   value={baseSpeed} onChange={(e) => setBaseSpeed(parseFloat(e.target.value))} 
                   className="lux-slider-mini"
                />
